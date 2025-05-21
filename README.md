@@ -1,47 +1,99 @@
-# sftpawslambda
+# 📦 sftpawslambda
 
-Usei o "pysftp", para isso é necessário adicionar uma camada(layer) para que o Python consigo dar o import.
+Este projeto utiliza a biblioteca `pysftp` em uma AWS Lambda Function. Como `pysftp` não está incluída por padrão no ambiente de execução da Lambda, é necessário criar uma **Lambda Layer** personalizada.
 
-1.    In the AWS Cloud9 console, create an Amazon Elastic Compute Cloud (Amazon EC2) instance with Amazon Linux 2 AMI. For instructions, see Creating an EC2 environment in the AWS Cloud9 User Guide.
+---
 
-2.    Create an AWS Identity and Access Management (IAM) policy that grants permissions to call the PublishLayerVersion API operation.
+## ⚙️ Requisitos
 
-Example IAM policy statement that grants permissions to call the PublishLayerVersion API operation
+- AWS CLI configurado
+- AWS Cloud9 com instância EC2 (Amazon Linux 2)
+- Python 3.8
+- Permissões IAM para `lambda:PublishLayerVersion`
 
+---
+
+## 🛠️ Passo a Passo
+
+### 1. Criar ambiente EC2 no AWS Cloud9
+
+Acesse o console do **AWS Cloud9** e crie um ambiente baseado em **Amazon Linux 2**.
+
+📚 [Guia oficial AWS – Criando um ambiente EC2 no Cloud9](https://docs.aws.amazon.com/cloud9/latest/user-guide/ec2-environments.html)
+
+---
+
+### 2. Criar política IAM
+
+Crie uma política com permissões para publicar uma Lambda Layer:
+
+```json
 {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "VisualEditor0",
-            "Effect": "Allow",
-            "Action": "lambda:PublishLayerVersion",
-            "Resource": "*"
-        }
-    ]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowLayerPublish",
+      "Effect": "Allow",
+      "Action": "lambda:PublishLayerVersion",
+      "Resource": "*"
+    }
+  ]
 }
-3.    Create an IAM role and attach the IAM policy to the role. Then, attach the IAM role to the Amazon EC2 instance.
+```
 
-Note: Your EC2 instance now has permissions to upload Lambda layers for the PublishLayerVersion API call.
+---
 
-4.    Open your AWS Cloud9 Amazon EC2 environment. Then, install Python 3.8 and pip3 by running the following commands:
+### 3. Criar e associar papel IAM
 
-$ sudo amazon-linux-extras install python3.8
-$ curl -O https://bootstrap.pypa.io/get-pip.py
-$ python3.8 get-pip.py --user
-5.    Create a python folder by running the following command:
+- Crie uma **IAM Role**
+- Anexe a política criada
+- Associe a role à instância EC2 do Cloud9
 
-$ mkdir python
-6.    Install the Pandas library files into the python folder by running the following command:
+🔐 Agora sua instância poderá publicar Lambda Layers.
 
-Important: Replace Pandas with the name of the Python library that you want to import.
+---
 
-$ python3.8 -m pip install pandas -t python/
-7.    Zip the contents of the python folder into a layer.zip file by running the following command:
+### 4. Instalar Python 3.8 e pip
 
-$ zip -r layer.zip python
-8.    Publish the Lambda layer by running the following command:
+```bash
+sudo amazon-linux-extras install python3.8 -y
+curl -O https://bootstrap.pypa.io/get-pip.py
+python3.8 get-pip.py --user
+```
 
-Important: Replace us-east-1 with the AWS Region that your Lambda function is in.
+---
 
-$ aws lambda publish-layer-version --layer-name pandas-layer --zip-file fileb://layer.zip --compatible-runtimes python3.8 --region us-east-1
-9.    Add the layer to your Lambda function.
+### 5. Criar pasta e instalar dependências
+
+Substitua `pandas` pelo nome da biblioteca que deseja empacotar (ex: `pysftp`).
+
+```bash
+mkdir python
+python3.8 -m pip install pysftp -t python/
+```
+
+---
+
+### 6. Criar o arquivo zip da Layer
+
+```bash
+zip -r layer.zip python
+```
+
+---
+
+### 7. Publicar a Layer na AWS
+
+Substitua `us-east-1` pela região da sua função Lambda.
+
+```bash
+aws lambda publish-layer-version   --layer-name pysftp-layer   --zip-file fileb://layer.zip   --compatible-runtimes python3.8   --region us-east-1
+```
+
+---
+
+### 8. Adicionar a Layer à sua Lambda
+
+No console do AWS Lambda, adicione a layer publicada à sua função.
+
+✅ Pronto! Sua Lambda já pode usar `import pysftp` sem erro.
